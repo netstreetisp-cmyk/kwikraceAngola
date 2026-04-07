@@ -39,22 +39,22 @@ export default function App() {
   return (
     <div className={cn("min-h-screen flex flex-col font-body bg-[#f8fafc]", !isAdmin && "bg-white")}>
       
-      {/* 🟢 HEADER ELITE (ITEL ADMIN STYLE) */}
+      {/* 🟢 HEADER HQ - CONTEXTO RACING */}
       <header className="h-20 bg-white border-b border-slate-100 flex justify-between items-center px-8 z-[100] fixed top-0 w-full">
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('landing')}>
-          <div className="bg-primary p-2.5 rounded-xl shadow-lg shadow-primary/20"><Rocket size={20} className="text-white" /></div>
-          <div><h1 className="text-lg font-black text-slate-800 tracking-tight leading-none uppercase">KwikRace Admin</h1><p className="text-[9px] font-bold text-slate-300 uppercase tracking-widest mt-1">Todas as Corridas 2026</p></div>
+          <div className="bg-[#1a1a1a] p-2.5 rounded-xl shadow-lg"><Rocket size={20} className="text-white" /></div>
+          <div><h1 className="text-lg font-black text-slate-800 tracking-tight leading-none uppercase">KWIKRACE HQ</h1><p className="text-[9px] font-bold text-primary uppercase tracking-widest mt-1 italic">{partner?.name || 'CENTRO OPERACIONAL'}</p></div>
         </div>
 
         <div className="flex items-center gap-6">
            {isAdmin && (
-             <div className="hidden md:flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-full border border-slate-100 italic">
-                <p className="text-[10px] font-black text-slate-400">staff@eventos.com</p>
+             <div className="hidden md:flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-full border border-slate-100">
+                <p className="text-[10px] font-black text-slate-400">operador.pistas@kwikrace.ao</p>
                 <div className="w-8 h-8 rounded-full bg-primary-variant flex items-center justify-center text-primary"><User size={16}/></div>
              </div>
            )}
            <button onClick={() => navigate(isAdmin ? 'landing' : 'admin_dash')} className="bg-white border-2 border-primary/10 text-primary text-[10px] font-black px-6 py-2.5 rounded-xl uppercase hover:bg-primary hover:text-white transition-all shadow-sm">
-              {isAdmin ? 'Mudar para Cliente' : 'Painel Gestor'}
+              {isAdmin ? 'Sair Painel' : 'Painel Staff'}
            </button>
         </div>
       </header>
@@ -220,31 +220,30 @@ function AdminPortal({ navigate, partner, tab }: any) {
   return (
     <div className="space-y-10 max-w-[1400px] mx-auto pb-20">
       
-      {/* 🟢 TOP STATS (KPIs) */}
+      {/* 🟢 TOP KPIs - CONTEXTO KARTING (ESPELHADO) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-         <KPICard label="Total de Inscritos" val={stats.activeMembers} icon={<Users className="text-primary"/>} badge="+ 12%" badgeColor="text-success bg-success/10" />
-         <KPICard label="Total Pagos" val={stats.completed} icon={<CreditCard className="text-success"/>} badge="+ 8%" badgeColor="text-success bg-success/10" />
-         <KPICard label="Comprovativos Pendentes" val={stats.pending} icon={<Clock className="text-warning"/>} badge="Pendente" badgeColor="text-slate-400 bg-slate-100" />
-         <KPICard label="Gerações Ativas" val={stats.active} icon={<Plus className="text-purple-500"/>} badge="Ativo" badgeColor="text-primary bg-primary/10" />
+         <KPICard label="Pilotos Registados" val={stats.activeMembers} icon={<Users size={20} className="text-primary"/>} badge="+ 12%" badgeColor="text-success bg-success/10" />
+         <KPICard label="Faturamento Previsto" val={stats.completed} icon={<CreditCard size={20} className="text-success"/>} badge="+ 8%" badgeColor="text-success bg-success/10" />
+         <KPICard label="Check-ins Pendentes" val={stats.pending} icon={<Clock size={20} className="text-warning"/>} badge="Pendente" badgeColor="text-slate-400 bg-slate-100" />
+         <KPICard label="Pistas em Operação" val={stats.active} icon={<Rocket size={20} className="text-purple-500"/>} badge="Ativo" badgeColor="text-primary bg-primary/10" />
       </div>
 
-      {/* 🟢 NAV TABS */}
+      {/* 🟢 ABAS DE NAVEGAÇÃO HQ */}
       <nav className="flex justify-center items-center gap-2 overflow-x-auto pb-4">
-         <TabBtn active={tab === 'participants'} onClick={()=>navigate('admin_pending')} icon={<Users size={16}/>} label="Participantes" />
-         <TabBtn active={tab === 'live'} onClick={()=>navigate('admin_active')} icon={<Zap size={16}/>} label="Feed de Corridas" />
-         <TabBtn active={false} icon={<Bell size={16}/>} label="Lembretes" />
-         <TabBtn active={false} icon={<Activity size={16}/>} label="Galeria" />
-         <TabBtn active={tab === 'audit'} onClick={()=>navigate('admin_logs')} icon={<History size={16}/>} label="Auditoria" />
+         <TabBtn active={tab === 'participants'} onClick={()=>navigate('admin_pending')} icon={<Users size={16}/>} label="Paddock (Inscrições)" />
+         <TabBtn active={tab === 'live'} onClick={()=>navigate('admin_active')} icon={<Zap size={16}/>} label="Controlo de Grelha" />
+         <TabBtn active={false} icon={<Bell size={16}/>} label="Avisos SMS" />
+         <TabBtn active={false} icon={<Activity size={16}/>} label="Métricas" />
+         <TabBtn active={tab === 'audit'} onClick={()=>navigate('admin_logs')} icon={<History size={16}/>} label="Histórico HQ" />
       </nav>
 
-      {/* 🟢 VIEW CONTAINER (GESTÃO DE PARTICIPANTES STYLE) */}
+      {/* 🟢 GESTÃO OPERACIONAL (ESPELHADA) */}
       <div className="bg-white border border-slate-100 rounded-[2.5rem] shadow-sm shadow-slate-200/50 overflow-hidden">
          <div className="p-10 space-y-10">
-            {/* Header Acções */}
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
                <div className="space-y-1">
-                  <h2 className="text-2xl font-black text-slate-800 leading-none">Gestão de Participantes</h2>
-                  <p className="text-sm font-medium text-slate-400">Visualize e gira todas as inscrições do kartódromo.</p>
+                  <h2 className="text-2xl font-black text-slate-800 leading-none">Controle de Paddock</h2>
+                  <p className="text-sm font-medium text-slate-400">Coordene as equipas e valide pagamentos de pista.</p>
                </div>
                
                <div className="flex flex-wrap items-center gap-4">
@@ -329,37 +328,15 @@ function ParticipantsTable({ partner }: any) {
 
   return (
     <div className="space-y-6">
-       {/* Barra de Acções Sincronizada */}
-       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8">
-          <div className="space-y-1">
-             <h2 className="text-2xl font-black text-slate-800 leading-none">Gestão de Participantes</h2>
-             <p className="text-sm font-medium text-slate-400">Visualize e gira todas as inscrições do evento.</p>
-          </div>
-          
-          <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto">
-             <div className="relative flex-1 lg:flex-none">
-                <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" />
-                <input 
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  placeholder="Pesquisar por nome ou equipe..." 
-                  className="pl-11 pr-6 py-3 bg-slate-50 border-none rounded-xl text-sm font-medium w-full lg:w-80 focus:bg-white focus:ring-2 focus:ring-primary/10 transition-all" 
-                />
-             </div>
-             <ExportBtn icon={<Download size={14}/>} label="CSV" />
-             <ExportBtn icon={<Download size={14}/>} label="PDF" color="bg-primary text-white" />
-          </div>
-       </div>
-
        <div className="overflow-x-auto">
           <table className="w-full">
              <thead>
                 <tr>
-                   <th className="itel-table-header text-left">Participante No Evento</th>
-                   <th className="itel-table-header text-left">Geração / Grupo</th>
-                   <th className="itel-table-header text-left">Estado</th>
-                   <th className="itel-table-header text-left">Inscrição</th>
-                   <th className="itel-table-header text-right">Ações</th>
+                   <th className="itel-table-header text-left">Líder de Equipa / Piloto</th>
+                   <th className="itel-table-header text-left">Membros (Equipa)</th>
+                   <th className="itel-table-header text-left">Estado (Check-in)</th>
+                   <th className="itel-table-header text-left">Data Submissão</th>
+                   <th className="itel-table-header text-right">Acções HQ</th>
                 </tr>
              </thead>
              <tbody className="divide-y divide-slate-50">
@@ -371,7 +348,7 @@ function ParticipantsTable({ partner }: any) {
                             <div><p className="text-sm font-black text-slate-800 italic uppercase leading-none">{g.leader_name}</p><p className="text-[10px] font-bold text-slate-400 mt-1">{g.leader_phone}</p></div>
                          </div>
                       </td>
-                      <td className="text-xs font-black text-slate-500">G0{g.members_data.length+1}</td>
+                      <td className="text-xs font-black text-slate-500">+{g.members_data.length} Pilotos</td>
                       <td>
                          <div className="flex items-center gap-2">
                             <div className={cn("w-2 h-2 rounded-full", g.status === 'approved' ? "bg-success" : "bg-slate-300")} />
