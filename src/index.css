@@ -1,0 +1,83 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;900&family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-headline: "Outfit", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-label: "Outfit", sans-serif;
+
+  --color-primary: #9d1c2b;
+  --color-primary-container: #fff1f2;
+  --color-on-primary: #ffffff;
+  
+  --color-secondary: #f4a7bb;
+  --color-secondary-container: #fff1f2;
+  
+  --color-tertiary: #10b981;
+  --color-tertiary-container: #ecfdf5;
+  --color-on-tertiary: #ffffff;
+
+  --color-surface: #ffffff;
+  --color-surface-container-low: #f9fafb;
+  --color-surface-container: #f3f4f6;
+  --color-surface-container-high: #e5e7eb;
+  --color-surface-container-highest: #d1d5db;
+  --color-surface-bright: #ffffff;
+  --color-surface-dim: #f3f4f6;
+  
+  --color-on-surface: #1a1a1a;
+  --color-on-surface-variant: #6b7280;
+  
+  --color-error: #ef4444;
+  --color-error-container: #fef2f2;
+}
+
+@layer base {
+  body {
+    @apply bg-surface text-on-surface font-body antialiased;
+    background: radial-gradient(circle at center, #ffffff 0%, #f9fafb 100%);
+    background-attachment: fixed;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-surface;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-surface-container-highest rounded-full border-2 border-surface;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-primary/40;
+  }
+}
+
+.glass {
+  @apply bg-white/70 backdrop-blur-xl border border-gray-100;
+}
+
+.glass-dark {
+  @apply bg-black/40 backdrop-blur-2xl border border-white/5;
+}
+
+.kinetic-gradient {
+  background: #f4a7bb; /* New color based on the design button */
+}
+
+.text-glow {
+  text-shadow: 0 0 15px rgba(157, 28, 43, 0.1);
+}
+
+.race-italic {
+  font-style: italic;
+  transform: skewX(-5deg);
+}
+
+.paddock-grid {
+  background-image: radial-gradient(rgba(157, 28, 43, 0.05) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
