@@ -1,77 +1,98 @@
 import { createClient } from '@supabase/supabase-js';
 
+// Init Supabase
 const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
-const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || '';
-export const supabase = createClient(supabaseUrl, supabaseKey);
+const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || '';
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 /**
- * 1. Auth Service
- * Logic: JWT verification, RBAC, session management.
+ * 1. Auth Service (RBAC & Identity)
  */
 export const AuthService = {
-  async verifySession(token: string) {
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-    if (error) return null;
-    return user;
-  },
-
-  async authorize(userId: string, requiredRole: string) {
-    const { data: user } = await supabase.from('users').select('role').eq('id', userId).single();
-    return user?.role === requiredRole;
+  async login(email: string, role: string) {
+    const { data } = await supabase.from('users').select('*').eq('email', email).eq('role', role).single();
+    return data;
   }
 };
 
 /**
- * 2. Partner Service (Tenants)
- * Logic: Settings, branding, status per tenant.
+ * 2. Partner Service (Tenant Isolation)
  */
 export const PartnerService = {
-  async getPartner(partnerId: string) {
-    const { data } = await supabase.from('partners').select('*').eq('id', partnerId).single();
+  async getBySlug(slug: string) {
+    const { data } = await supabase.from('partners').select('*').eq('slug', slug).single();
     return data;
-  },
-
-  async updateSettings(partnerId: string, settings: any) {
-    const { data } = await supabase.from('partners').update({ settings }).eq('id', partnerId).select();
-    return data?.[0];
   }
 };
 
 /**
- * 3. User Service (Profiles)
- * Logic: User data, account management.
+ * 3. CRM & Contact Service (Marketing Ready)
  */
-export const UserService = {
-  async getProfile(userId: string) {
-    const { data } = await supabase.from('users').select('*').eq('id', userId).single();
-    return data;
-  },
-
-  async createClient(email: string, full_name: string, phone: string, partner_id: string) {
-    const { data } = await supabase.from('users').insert([{ email, full_name, phone, role: 'client', partner_id }]).select();
-    return data?.[0];
+export const CRMService = {
+  async syncGroupToContacts(partnerId: string, membersData: any[]) {
+    const contacts = membersData.map(m => ({
+      partner_id: partnerId,
+      name: m.name,
+      phone: m.phone,
+      age: m.age,
+      metadata: { source: 'registration_group' }
+    }));
+    const { error } = await supabase.from('contacts').upsert(contacts, { onConflict: 'partner_id,phone' });
+    if (error) console.error('[CRM_ERROR] Falha ao sincronizar:', error.message);
   }
 };
 
 /**
- * 4. Group Service (Racing Teams)
- * Logic: Registration, members, payment status.
+ * 4. Group Service (ITEL ADMIN COMPLIANT)
  */
 export const GroupService = {
-  async registerGroup(partnerId: string, leader: { name: string, phone: string }, members: string[]) {
-    const { data, error } = await supabase.from('groups').insert([{
+  async submit(partnerId: string, leader: any, members: any[], terms: boolean, totalPrice: number) {
+    if (!terms) throw new Error("É necessário aceitar os termos.");
+    const { data: group } = await supabase.from('groups').insert([{
       partner_id: partnerId,
       leader_name: leader.name,
       leader_phone: leader.phone,
-      members,
+      members_data: members,
+      terms_accepted: terms,
+      total_price: totalPrice,
       status: 'pending'
-    }]).select();
-    if (error) throw error;
-    return data?.[0];
+    }]).select().single();
+    await CRMService.syncGroupToContacts(partnerId, [...members, { name: leader.name, phone: leader.phone, age: leader.age }]);
+    await supabase.from('audit_logs').insert([{
+      partner_id: partnerId,
+      service_name: 'registration',
+      action: 'SUBMISSION',
+      details: { leaderName: leader.name, membersCount: members.length }
+    }]);
+    return group;
   },
 
-  async updateStatus(groupId: string, status: string) {
-    const { data } = await supabase.from('groups').update({ status }).eq('id', groupId).select();
-    return data?.[0];
+  async approve(partnerId: string, groupId: string) {
+    const { data } = await supabase.from('groups').update({ 
+      status: 'approved', 
+      approved_at: new Date().toISOString() 
+    }).eq('id', groupId).select().single();
+    await supabase.from('audit_logs').insert([{
+      partner_id: partnerId,
+      service_name: 'staff',
+      action: 'APPROVAL',
+      details: { groupId, time: new Date().toLocaleTimeString() }
+    }]);
+    return data;
+  },
+
+  async reject(partnerId: string, groupId: string, reason: string) {
+    const { data } = await supabase.from('groups').update({ 
+      status: 'rejected', 
+      rejected_at: new Date().toISOString(),
+      rejection_reason: reason
+    }).eq('id', groupId).select().single();
+    await supabase.from('audit_logs').insert([{
+      partner_id: partnerId,
+      service_name: 'staff',
+      action: 'REJECTION',
+      details: { groupId, reason }
+    }]);
+    return data;
   }
 };

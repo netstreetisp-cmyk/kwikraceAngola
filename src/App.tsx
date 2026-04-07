@@ -1,465 +1,502 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Trophy, 
-  Users, 
-  Timer, 
-  Settings, 
-  LayoutDashboard, 
-  Plus, 
-  CheckCircle2, 
-  XCircle, 
-  Bell, 
-  Flag,
-  ChevronRight,
-  MapPin,
-  CreditCard,
-  History,
-  ShieldCheck,
-  Rocket
+  Trophy, Users, Timer, Settings, LayoutDashboard, Plus, CheckCircle2, 
+  XCircle, Bell, Flag, ChevronRight, MapPin, CreditCard, History, 
+  ShieldCheck, Rocket, BarChart3, Activity, Globe, LogIn, Store, 
+  Trash2, AlertCircle, RefreshCw, Layers, Calendar, ChevronLeft, Search, 
+  FileText, Zap, MousePointer2, UserCheck, ShieldAlert, UserPlus, Eye, Clock, Download, FileJson,
+  ChevronDown, User
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './lib/utils';
-import { Button } from './components/Button';
-import { Card } from './components/Card';
+import { supabase } from './services/core';
+import { GroupService } from './services/core';
+import { RacingEngine, NotificationService, PriceService } from './services/racing';
 
-// Types
-type View = 'landing' | 'register' | 'status' | 'admin' | 'superadmin';
+type ViewType = 
+  | 'landing' | 'register' | 'confirmation' | 'notif_status'
+  | 'admin_dash' | 'admin_pending' | 'admin_active' | 'admin_logs' | 'admin_price'
+  | 'sadmin_dash';
 
 export default function App() {
-  const [view, setView] = useState<View>('landing');
-  const [partner, setPartner] = useState({ name: 'Algarve Circuit', id: 'aia-2024' });
+  const [view, setView] = useState<ViewType>('landing');
+  const [partner, setPartner] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function init() {
+       const { data } = await supabase.from('partners').select('*').eq('slug', 'speedway-luanda').single();
+       setPartner(data || { name: 'KwikRace HQ', id: 'sl-01' });
+       setLoading(false);
+    }
+    init();
+  }, []);
+
+  const navigate = (v: ViewType) => setView(v);
+  const isAdmin = view.startsWith('admin') || view.startsWith('sadmin');
+
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><Rocket size={32} className="text-primary animate-bounce" /></div>;
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Header */}
-      <header className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md h-20 flex justify-between items-center px-8 border-b border-gray-50">
-        <div className="flex items-center gap-3">
-          <svg width="32" height="32" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 10V34M12 22L32 10M12 22L32 34" stroke="#9d1c2b" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          <h1 
-            className="text-2xl font-black text-[#1a1a1a] tracking-tight cursor-pointer"
-            onClick={() => setView('landing')}
-          >
-            KwikRace
-          </h1>
+    <div className={cn("min-h-screen flex flex-col font-body bg-[#f8fafc]", !isAdmin && "bg-white")}>
+      
+      {/* 🟢 HEADER ELITE (ITEL ADMIN STYLE) */}
+      <header className="h-20 bg-white border-b border-slate-100 flex justify-between items-center px-8 z-[100] fixed top-0 w-full">
+        <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('landing')}>
+          <div className="bg-primary p-2.5 rounded-xl shadow-lg shadow-primary/20"><Rocket size={20} className="text-white" /></div>
+          <div><h1 className="text-lg font-black text-slate-800 tracking-tight leading-none uppercase">KwikRace Admin</h1><p className="text-[9px] font-bold text-slate-300 uppercase tracking-widest mt-1">Todas as Corridas 2026</p></div>
         </div>
-        <div className="flex items-center gap-4">
-          <button 
-            className="px-6 py-2 rounded-full border-2 border-[#fff1f2] bg-[#fffafb] text-[#9d1c2b] text-xs font-black uppercase tracking-widest hover:bg-[#fff1f2] transition-colors shadow-sm"
-            onClick={() => setView(view === 'admin' ? 'landing' : 'admin')}
-          >
-            GESTOR
-          </button>
+
+        <div className="flex items-center gap-6">
+           {isAdmin && (
+             <div className="hidden md:flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-full border border-slate-100 italic">
+                <p className="text-[10px] font-black text-slate-400">staff@eventos.com</p>
+                <div className="w-8 h-8 rounded-full bg-primary-variant flex items-center justify-center text-primary"><User size={16}/></div>
+             </div>
+           )}
+           <button onClick={() => navigate(isAdmin ? 'landing' : 'admin_dash')} className="bg-white border-2 border-primary/10 text-primary text-[10px] font-black px-6 py-2.5 rounded-xl uppercase hover:bg-primary hover:text-white transition-all shadow-sm">
+              {isAdmin ? 'Mudar para Cliente' : 'Painel Gestor'}
+           </button>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 pt-24 pb-32 px-6 max-w-7xl mx-auto w-full">
-        <AnimatePresence mode="wait">
-          {view === 'landing' && (
-            <motion.div key="landing">
-              <LandingView onRegister={() => setView('register')} />
-            </motion.div>
-          )}
-          {view === 'register' && (
-            <motion.div key="register">
-              <RegisterView onComplete={() => setView('status')} />
-            </motion.div>
-          )}
-          {view === 'status' && (
-            <motion.div key="status">
-              <StatusView />
-            </motion.div>
-          )}
-          {view === 'admin' && (
-            <motion.div key="admin">
-              <AdminDashboard />
-            </motion.div>
-          )}
-          {view === 'superadmin' && (
-            <motion.div key="superadmin">
-              <SuperAdminDashboard />
-            </motion.div>
-          )}
-        </AnimatePresence>
+      {/* 🟢 CONTEÚDO DINÂMICO */}
+      <main className={cn("flex-1", isAdmin ? "pt-28 pb-20 px-10" : "pt-20 px-4")}>
+          {renderContent(view, navigate, partner)}
       </main>
 
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 w-full z-50 bg-white/90 backdrop-blur-md h-22 flex justify-around items-center pb-6 px-4 border-t border-gray-100">
-        <NavButton active={view === 'landing'} onClick={() => setView('landing')} icon={<LayoutDashboard size={24} />} label="Fila" />
-        <NavButton active={false} onClick={() => {}} icon={<CreditCard size={24} />} label="Preços" />
-        <NavButton active={false} onClick={() => {}} icon={<History size={24} />} label="Logs" />
-        <NavButton active={view === 'admin'} onClick={() => setView('admin')} icon={<Settings size={24} />} label="Admin" />
-      </nav>
+      {/* FOOTER CLIENTE MOBILE */}
+      {!isAdmin && <nav className="fixed bottom-0 w-full z-10 bg-white border-t border-slate-100 h-20 flex justify-around items-center md:hidden"><NavBtn active={view === 'landing'} onClick={() => navigate('landing')} icon={<LayoutDashboard size={20}/>} label="Home" /><NavBtn active={view === 'notif_status'} onClick={() => navigate('notif_status')} icon={<Timer size={20}/>} label="Fila" /><NavBtn active={view === 'admin_dash'} onClick={() => navigate('admin_dash')} icon={<Settings size={20}/>} label="Staff" /></nav>}
     </div>
   );
 }
 
-function NavButton({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) {
+function renderContent(view: ViewType, navigate: (v: ViewType) => void, partner: any) {
+  switch (view) {
+    case 'landing': return <ClientHome onRegister={() => navigate('register')} partner={partner} />;
+    case 'register': return <ClientRegister onComplete={() => navigate('confirmation')} partner={partner} />;
+    case 'confirmation': return <ClientConfirmation onStatus={() => navigate('notif_status')} />;
+    case 'notif_status': return <ClientLiveQueue partner={partner} />;
+    case 'admin_dash': return <AdminPortal navigate={navigate} partner={partner} tab="participants" />;
+    case 'admin_pending': return <AdminPortal navigate={navigate} partner={partner} tab="participants" />;
+    case 'admin_active': return <AdminPortal navigate={navigate} partner={partner} tab="live" />;
+    case 'admin_logs': return <AdminPortal navigate={navigate} partner={partner} tab="audit" />;
+    case 'admin_price': return <AdminPortal navigate={navigate} partner={partner} tab="price" />;
+    default: return <ClientHome onRegister={() => navigate('register')} partner={partner} />;
+  }
+}
+
+function NavBtn({ active, onClick, icon, label }: any) {
   return (
-    <button 
-      onClick={onClick}
-      className={cn(
-        "flex flex-col items-center justify-center transition-all active:scale-90 relative",
-        active ? "text-[#9d1c2b]" : "text-gray-400 hover:text-gray-600"
-      )}
-    >
-      {active && <div className="absolute -top-3 w-8 h-1 bg-[#9d1c2b] rounded-full" />}
+    <button onClick={onClick} className={cn("flex flex-col items-center gap-1", active ? "text-primary bg-primary/5 p-2 rounded-xl" : "text-gray-300 opacity-60")}>
       {icon}
-      <span className="font-headline text-[9px] font-black uppercase tracking-widest mt-1">{label}</span>
+      <span className="text-[8px] font-bold uppercase">{label}</span>
     </button>
   );
 }
 
-// --- Views ---
+// -----------------------------------------------------
+// 1. CLIENTE (INSTITUCIONAL CLEAN)
+// -----------------------------------------------------
 
-function LandingView({ onRegister }: { onRegister: () => void }) {
+function ClientHome({ onRegister, partner }: any) {
+  const [priceToday, setPriceToday] = useState<number>(0);
+  useEffect(() => { PriceService.getPriceForToday(partner.id).then(setPriceToday); }, [partner.id]);
+
   return (
-    <motion.div 
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 1.05 }}
-      className="flex flex-col items-center justify-center min-h-[70vh] text-center space-y-12 py-12"
-    >
-      {/* Big Central Logo */}
-      <div className="mb-4">
-        <svg width="80" height="80" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 10V34M12 22L32 10M12 22L32 34" stroke="#9d1c2b" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      </div>
-
+    <div className="flex flex-col items-center justify-center min-h-[70vh] text-center space-y-12">
+      <Rocket size={64} className="text-primary animate-pulse" />
       <div className="space-y-4">
-        <h2 className="font-headline text-5xl md:text-6xl font-black tracking-tight text-[#9d1c2b] leading-tight">
-          Acelere para a Pista!
-        </h2>
-        <p className="text-on-surface-variant font-medium text-lg md:text-xl">
-          Inscreva o seu grupo no Karting mais próximo.
-        </p>
+         <h2 className="text-5xl font-black text-slate-800 uppercase tracking-tighter leading-none italic">Acelere para a <br/><span className="text-primary italic">Pista!</span></h2>
+         <p className="text-slate-400 font-medium text-sm max-w-xs mx-auto italic uppercase tracking-wider">Inscreva o seu grupo no Karting mais próximo.</p>
       </div>
-
-      {/* QR Code Verification Card */}
-      <div className="w-full max-w-md bg-white rounded-[40px] p-10 shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-gray-50 flex flex-col items-center space-y-8">
-        <div className="flex items-center gap-2 self-start mb-2">
-          <div className="text-[#e11d48]">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm13-2l3 3-3 3-3-3 3-3z" />
-            </svg>
-          </div>
-          <span className="text-[11px] font-black uppercase tracking-[0.2em] text-[#1a1a1a]">CÓDIGO DO QR CODE</span>
-        </div>
-
-        <div className="flex gap-4 justify-center w-full">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="w-16 h-16 md:w-20 md:h-20 bg-[#f8fafc] rounded-2xl flex items-center justify-center border border-gray-50">
-              <div className="w-3 h-3 bg-slate-500 rounded-full" />
-            </div>
-          ))}
-        </div>
-
-        <button 
-          onClick={onRegister}
-          className="w-full py-6 bg-[#f4a7bb] hover:bg-[#f195ae] text-white rounded-3xl font-black uppercase tracking-[0.15em] text-sm transition-all shadow-lg shadow-pink-100/50 flex justify-center items-center gap-2"
-        >
-          VALIDAR LOCAL
-        </button>
+      <div className="bg-white p-12 rounded-[3.5rem] border-2 border-slate-50 shadow-2xl space-y-8 relative overflow-hidden w-full max-w-sm">
+         <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full" />
+         <div className="space-y-1">
+            <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest"><CreditCard size={14} className="inline mr-1"/> CÓDIGO DO QR CODE</p>
+            <h3 className="text-4xl font-black text-slate-800 italic mt-6 tracking-tighter">{priceToday.toLocaleString()},00 <span className="text-xs block opacity-30 not-italic uppercase font-bold mt-2 tracking-widest">Preço Individual</span></h3>
+         </div>
+         <button onClick={onRegister} className="w-full h-16 bg-primary text-white rounded-2xl font-black italic tracking-widest uppercase shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all">VALIDAR LOCAL</button>
       </div>
-
-      {/* Footer */}
-      <div className="pt-8 space-y-4">
-        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-[#9d1c2b]">KWIKRACE SMART REGISTRATION</p>
-        <p className="text-[11px] font-medium text-gray-400">
-          © 2026 <span className="text-[#9d1c2b] font-bold">KwikRace Angola</span>.
-        </p>
-      </div>
-    </motion.div>
+      <p className="text-[10px] font-black text-primary uppercase tracking-[0.4em] opacity-40">KwikRace Smart Registration</p>
+    </div>
   );
 }
 
-function RegisterView({ onComplete }: { onComplete: () => void }) {
-  const [pilots, setPilots] = useState(['']);
+function ClientRegister({ onComplete, partner }: any) {
+  const [pilots, setPilots] = useState([{ name: '', phone: '', age: '' }]);
   const [loading, setLoading] = useState(false);
+  const [terms, setTerms] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const todayPrice = await PriceService.getPriceForToday(partner.id);
+      await GroupService.submit(partner.id, pilots[0], pilots.slice(1), terms, pilots.length * todayPrice);
       onComplete();
-    }, 1500);
+    } catch (e: any) { alert(e.message); } finally { setLoading(false); }
   };
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      className="max-w-lg mx-auto space-y-8"
-    >
-      <div className="relative">
-        <div className="absolute -left-6 top-1/2 -translate-y-1/2 w-1 h-12 bg-[#9d1c2b]" />
-        <p className="text-[#9d1c2b] text-[10px] font-bold uppercase tracking-[0.3em] mb-1">Registration Portal</p>
-        <h2 className="font-headline text-4xl font-black tracking-tight uppercase">Novo Grupo</h2>
+    <div className="max-w-xl mx-auto space-y-10 py-10">
+      <h2 className="text-3xl font-black italic text-slate-800 uppercase">Inscrição <span className="text-primary">Equipa</span></h2>
+      <div className="space-y-6">
+        {pilots.map((p, i) => (
+          <div key={i} className="itel-card relative pt-10">
+             <div className="absolute top-4 left-6 text-[10px] font-black text-slate-300 uppercase">Piloto #{i+1}</div>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input value={p.name} placeholder="Nome Completo" onChange={e=>{const n=[...pilots];n[i].name=e.target.value;setPilots(n)}} className="bg-slate-50 rounded-xl p-4 text-sm font-bold border-none" />
+                <input value={p.phone} placeholder="Contact Number" onChange={e=>{const n=[...pilots];n[i].phone=e.target.value;setPilots(n)}} className="bg-slate-50 rounded-xl p-4 text-sm font-bold border-none" />
+             </div>
+          </div>
+        ))}
+        <button onClick={() => setPilots([...pilots, { name: '', phone: '', age: '' }])} className="w-full py-6 border-2 border-dashed border-slate-200 rounded-[35px] text-[10px] font-black text-slate-400 uppercase tracking-widest hover:border-primary transition-all">+ Elemento</button>
+        <div className="bg-slate-900 text-white p-10 rounded-[3rem] space-y-8 shadow-2xl">
+           <label className="flex gap-4 cursor-pointer"><input type="checkbox" checked={terms} onChange={e=>setTerms(e.target.checked)} className="w-6 h-6 rounded text-primary" /><p className="text-[10px] font-bold opacity-60">Li e aceito os termos do Karting.</p></label>
+           <button disabled={!terms || loading} onClick={handleSubmit} className="w-full h-16 bg-primary rounded-2xl font-black uppercase text-sm">{loading ? 'ENVIANDO...' : 'RESERVAR LUGAR FILA HOJE'}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ClientConfirmation({ onStatus }: any) {
+  return (
+    <div className="text-center py-24 space-y-8 max-w-sm mx-auto">
+       <CheckCircle2 size={72} className="mx-auto text-primary" />
+       <h2 className="text-4xl font-black italic uppercase">Inscrito!</h2>
+       <p className="text-sm font-bold text-slate-400">Dirija-se ao staff agora.</p>
+       <button onClick={onStatus} className="bg-primary text-white w-full h-16 rounded-2xl font-black uppercase shadow-lg shadow-primary/20 italic">LIVE STATUS</button>
+    </div>
+  );
+}
+
+function ClientLiveQueue({ partner }: any) {
+  const [queue, setQueue] = useState<any[]>([]);
+  useEffect(() => { supabase.from('groups').select('*').eq('partner_id', partner.id).eq('status', 'approved').order('queue_position').then(({data})=>setQueue(data||[])); }, [partner.id]);
+
+  return (
+    <div className="max-w-md mx-auto py-10 space-y-12">
+       <div className="bg-slate-900 text-white p-12 rounded-[50px] shadow-3xl text-center space-y-2 border-b-8 border-primary">
+          <p className="text-[10px] font-black text-primary uppercase tracking-widest">Track Status: ACTIVE</p>
+          <h3 className="text-4xl font-black italic uppercase">Delta Squad</h3>
+       </div>
+       <div className="space-y-4">
+          <p className="text-[10px] font-black uppercase text-slate-300 tracking-widest italic ml-4">Próximos Pilotos</p>
+          {queue.map((g, i) => (
+             <div key={g.id} className="bg-white border-none p-6 rounded-[35px] flex items-center gap-8 shadow-sm opacity-50 scale-95 border border-slate-50">
+                <p className="text-3xl font-black italic text-slate-100">#0{i+1}</p>
+                <div><h4 className="text-sm font-black uppercase tracking-tight italic">{g.leader_name} Team</h4><p className="text-[9px] font-bold text-slate-300">EM FILA DE ESPERA</p></div>
+             </div>
+          ))}
+       </div>
+    </div>
+  );
+}
+
+// -----------------------------------------------------
+// 2. STAFF - PORTAL ELITE (ITEL ADMIN REPLICA)
+// -----------------------------------------------------
+
+function AdminPortal({ navigate, partner, tab }: any) {
+  const [stats, setStats] = useState({ pending: 0, active: 0, completed: 82, activeMembers: 0 });
+  const [smsBalance, setSmsBalance] = useState<number | string>('...');
+  const [price, setPrice] = useState(0);
+
+  useEffect(() => {
+    async function load() {
+       const { count: pCount } = await supabase.from('groups').select('*', { count: 'exact', head: true }).eq('partner_id', partner.id).eq('status', 'pending');
+       const { count: aCount } = await supabase.from('groups').select('*', { count: 'exact', head: true }).eq('partner_id', partner.id).eq('status', 'approved');
+       const { data: grpData } = await supabase.from('groups').select('*').eq('partner_id', partner.id);
+       const memCount = grpData?.reduce((acc: number, curr: any) => acc + (curr.members_data.length + 1), 0) || 0;
+       const bal = await NotificationService.getBalance();
+       const prc = await PriceService.getPriceForToday(partner.id);
+       setStats({ pending: pCount || 0, active: aCount || 0, completed: 82, activeMembers: memCount });
+       setSmsBalance(bal);
+       setPrice(prc);
+    }
+    load();
+  }, [partner.id]);
+
+  return (
+    <div className="space-y-10 max-w-[1400px] mx-auto pb-20">
+      
+      {/* 🟢 TOP STATS (KPIs) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+         <KPICard label="Total de Inscritos" val={stats.activeMembers} icon={<Users className="text-primary"/>} badge="+ 12%" badgeColor="text-success bg-success/10" />
+         <KPICard label="Total Pagos" val={stats.completed} icon={<CreditCard className="text-success"/>} badge="+ 8%" badgeColor="text-success bg-success/10" />
+         <KPICard label="Comprovativos Pendentes" val={stats.pending} icon={<Clock className="text-warning"/>} badge="Pendente" badgeColor="text-slate-400 bg-slate-100" />
+         <KPICard label="Gerações Ativas" val={stats.active} icon={<Plus className="text-purple-500"/>} badge="Ativo" badgeColor="text-primary bg-primary/10" />
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-8">
-        <div className="space-y-3">
-          <label className="block font-headline text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant">Líder da Equipa</label>
-          <input 
-            required
-            className="w-full bg-gray-50 border-0 border-b-2 border-gray-100 focus:border-[#9d1c2b] focus:ring-0 text-on-surface px-4 py-5 transition-all rounded-t-2xl font-medium placeholder:text-on-surface-variant/40"
-            placeholder="Insira o nome do líder..."
-          />
-        </div>
+      {/* 🟢 NAV TABS */}
+      <nav className="flex justify-center items-center gap-2 overflow-x-auto pb-4">
+         <TabBtn active={tab === 'participants'} onClick={()=>navigate('admin_pending')} icon={<Users size={16}/>} label="Participantes" />
+         <TabBtn active={tab === 'live'} onClick={()=>navigate('admin_active')} icon={<Zap size={16}/>} label="Feed de Corridas" />
+         <TabBtn active={false} icon={<Bell size={16}/>} label="Lembretes" />
+         <TabBtn active={false} icon={<Activity size={16}/>} label="Galeria" />
+         <TabBtn active={tab === 'audit'} onClick={()=>navigate('admin_logs')} icon={<History size={16}/>} label="Auditoria" />
+      </nav>
 
-        <div className="space-y-4">
-          <div className="flex justify-between items-baseline">
-            <label className="block font-headline text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant">Grid de Pilotos</label>
-            <span className="text-primary font-headline text-2xl font-black italic">{pilots.length} Slots</span>
+      {/* 🟢 VIEW CONTAINER (GESTÃO DE PARTICIPANTES STYLE) */}
+      <div className="bg-white border border-slate-100 rounded-[2.5rem] shadow-sm shadow-slate-200/50 overflow-hidden">
+         <div className="p-10 space-y-10">
+            {/* Header Acções */}
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+               <div className="space-y-1">
+                  <h2 className="text-2xl font-black text-slate-800 leading-none">Gestão de Participantes</h2>
+                  <p className="text-sm font-medium text-slate-400">Visualize e gira todas as inscrições do kartódromo.</p>
+               </div>
+               
+               <div className="flex flex-wrap items-center gap-4">
+                  <div className="bg-slate-50 px-6 py-3 rounded-xl flex items-center gap-4 border border-slate-100">
+                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Preço Inscrição:</p>
+                     <p className="text-base font-black text-slate-800">{price.toLocaleString()},00</p>
+                     <button onClick={()=>navigate('admin_price')} className="bg-primary text-white text-[10px] font-black px-4 py-1.5 rounded-lg ml-2 active:scale-95 transition-all">Atualizar</button>
+                  </div>
+                  
+                  <div className="relative group">
+                     <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" />
+                     <input placeholder="Pesquisar por nome ou equipe..." className="pl-11 pr-6 py-3 bg-slate-50 border-none rounded-xl text-sm font-medium w-64 md:w-80 group-hover:bg-slate-100 transition-all focus:ring-0" />
+                  </div>
+
+                  <div className="flex gap-2">
+                     <ExportBtn icon={<Download size={14}/>} label="CSV" />
+                     <ExportBtn icon={<Download size={14}/>} label="PDF" color="bg-primary text-white" />
+                  </div>
+               </div>
+            </div>
+
+            {/* Content Logic */}
+            {tab === 'participants' && <ParticipantsTable partner={partner} />}
+            {tab === 'live' && <LiveGrid partner={partner} />}
+            {tab === 'audit' && <AuditView partner={partner} />}
+            {tab === 'price' && <PriceEditor partner={partner} navigate={navigate} />}
+         </div>
+      </div>
+    </div>
+  );
+}
+
+function KPICard({ label, val, icon, badge, badgeColor }: any) {
+  return (
+    <div className="itel-card flex flex-col justify-between h-44 relative overflow-hidden group">
+       <div className="absolute top-0 left-0 w-2 h-full bg-primary opacity-0 group-hover:opacity-100 transition-all"/>
+       <div className="flex justify-between items-start">
+          <div className="bg-slate-50 p-4 rounded-2xl group-hover:bg-white group-hover:shadow-md transition-all">{icon}</div>
+          <span className={cn("itel-badge", badgeColor)}>{badge}</span>
+       </div>
+       <div className="space-y-1">
+          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-tight">{label}</p>
+          <p className="text-4xl font-black text-slate-800 italic tracking-tighter">{val}</p>
+       </div>
+    </div>
+  );
+}
+
+function TabBtn({ active, onClick, icon, label }: any) {
+  return (
+    <button onClick={onClick} className={cn("itel-tab", active ? "itel-tab-active" : "itel-tab-inactive")}>
+       {icon} {label}
+    </button>
+  );
+}
+
+function ExportBtn({ icon, label, color }: any) {
+  return (
+    <button className={cn("flex items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-bold uppercase transition-all shadow-sm active:scale-95", color || "bg-slate-50 text-slate-400 hover:bg-slate-100")}>
+       {icon} {label}
+    </button>
+  );
+}
+
+// -----------------------------------------------------
+// TAB: PARTICIPANTS REPLICA
+// -----------------------------------------------------
+
+function ParticipantsTable({ partner }: any) {
+  const [list, setList] = useState<any[]>([]);
+  const [search, setSearch] = useState('');
+  const [selected, setSelected] = useState<any>(null);
+
+  useEffect(() => {
+    supabase.from('groups').select('*').eq('partner_id', partner.id).order('created_at', { ascending: false }).then(({data})=>setList(data||[]));
+  }, [partner.id]);
+
+  const filtered = list.filter(g => 
+    g.leader_name.toLowerCase().includes(search.toLowerCase()) || 
+    g.leader_phone.includes(search)
+  );
+
+  return (
+    <div className="space-y-6">
+       {/* Barra de Acções Sincronizada */}
+       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8">
+          <div className="space-y-1">
+             <h2 className="text-2xl font-black text-slate-800 leading-none">Gestão de Participantes</h2>
+             <p className="text-sm font-medium text-slate-400">Visualize e gira todas as inscrições do evento.</p>
           </div>
           
-          <div className="space-y-3">
-            {pilots.map((_, i) => (
-              <div key={i} className="flex items-center gap-4 p-4 bg-white border border-gray-100 rounded-2xl shadow-sm">
-                <div className="w-10 h-10 flex items-center justify-center bg-gray-50 text-[11px] font-black font-headline rounded-lg border border-gray-100">P{i+1}</div>
+          <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto">
+             <div className="relative flex-1 lg:flex-none">
+                <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" />
                 <input 
-                  className="flex-1 bg-transparent border-none focus:ring-0 text-sm p-0 placeholder:text-on-surface-variant/30 font-medium"
-                  placeholder="Nome completo do piloto..."
-                  required
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="Pesquisar por nome ou equipe..." 
+                  className="pl-11 pr-6 py-3 bg-slate-50 border-none rounded-xl text-sm font-medium w-full lg:w-80 focus:bg-white focus:ring-2 focus:ring-primary/10 transition-all" 
                 />
-                {i > 0 && (
-                  <button type="button" onClick={() => setPilots(pilots.filter((_, idx) => idx !== i))} className="text-red-500">
-                    <XCircle size={20} />
-                  </button>
-                )}
-              </div>
-            ))}
-            
-            {pilots.length < 6 && (
-              <button 
-                type="button"
-                onClick={() => setPilots([...pilots, ''])}
-                className="w-full py-4 border-2 border-dashed border-outline-variant/50 rounded-xl text-on-surface-variant hover:border-primary hover:text-primary transition-all flex items-center justify-center gap-3"
-              >
-                <Plus size={20} />
-                <span className="text-[10px] font-black uppercase tracking-[0.2em]">Adicionar Piloto</span>
-              </button>
-            )}
+             </div>
+             <ExportBtn icon={<Download size={14}/>} label="CSV" />
+             <ExportBtn icon={<Download size={14}/>} label="PDF" color="bg-primary text-white" />
           </div>
-        </div>
+       </div>
 
-        <Card variant="default" className="space-y-4 border-[#fff1f2] bg-[#fffafb]">
-          <div className="flex justify-between items-center">
-            <span className="text-on-surface-variant text-[10px] font-black uppercase tracking-[0.2em]">Total Estimado</span>
-            <span className="text-[#9d1c2b] font-headline text-2xl font-black italic">{pilots.length * 15000} AOA</span>
-          </div>
-          <Button type="submit" className="w-full py-5" loading={loading}>
-            Finalizar Inscrição
-          </Button>
-        </Card>
-      </form>
-    </motion.div>
+       <div className="overflow-x-auto">
+          <table className="w-full">
+             <thead>
+                <tr>
+                   <th className="itel-table-header text-left">Participante No Evento</th>
+                   <th className="itel-table-header text-left">Geração / Grupo</th>
+                   <th className="itel-table-header text-left">Estado</th>
+                   <th className="itel-table-header text-left">Inscrição</th>
+                   <th className="itel-table-header text-right">Ações</th>
+                </tr>
+             </thead>
+             <tbody className="divide-y divide-slate-50">
+                {filtered.map((g) => (
+                   <tr key={g.id} className="itel-table-row">
+                      <td className="py-5">
+                         <div className="flex items-center gap-4">
+                            <div className="avatar-initials uppercase shadow-sm border-2 border-white">{g.leader_name.slice(0,2)}</div>
+                            <div><p className="text-sm font-black text-slate-800 italic uppercase leading-none">{g.leader_name}</p><p className="text-[10px] font-bold text-slate-400 mt-1">{g.leader_phone}</p></div>
+                         </div>
+                      </td>
+                      <td className="text-xs font-black text-slate-500">G0{g.members_data.length+1}</td>
+                      <td>
+                         <div className="flex items-center gap-2">
+                            <div className={cn("w-2 h-2 rounded-full", g.status === 'approved' ? "bg-success" : "bg-slate-300")} />
+                            <span className={cn("text-[11px] font-bold", g.status === 'approved' ? "text-success" : "text-slate-400")}>{g.status === 'approved' ? '• Pago' : '• Não Pago'}</span>
+                         </div>
+                      </td>
+                      <td className="text-[10px] font-bold text-slate-300 font-mono italic">{new Date(g.created_at).toLocaleDateString()}</td>
+                      <td className="text-right">
+                         <div className="flex justify-end gap-1">
+                            <ActionIcon onClick={()=>setSelected(g)} icon={<Eye size={16}/>} />
+                            <ActionIcon icon={<Clock size={16}/>} color="text-warning" />
+                            <ActionIcon icon={<CheckCircle2 size={16}/>} color="text-success" onClick={async () => { await GroupService.approve(partner.id, g.id); window.location.reload(); }} />
+                            <ActionIcon icon={<Trash2 size={16}/>} color="text-error" onClick={async () => { await GroupService.reject(partner.id, g.id, 'Log Rejection'); window.location.reload(); }} />
+                         </div>
+                      </td>
+                   </tr>
+                ))}
+             </tbody>
+          </table>
+       </div>
+
+       {/* MODAL DETALHES (ITEL POPUP STYLE) */}
+       {selected && (
+         <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm">
+            <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden animate-soft-pulse">
+               <div className="p-8 bg-primary text-white flex justify-between items-center">
+                  <div><h3 className="text-xl font-black uppercase italic leading-none">{selected.leader_name}</h3><p className="text-[10px] opacity-60 font-bold uppercase mt-2 tracking-widest">Detalhes da Inscrição No Evento</p></div>
+                  <button onClick={()=>setSelected(null)} className="p-2 hover:bg-white/10 rounded-lg"><XCircle size={24}/></button>
+               </div>
+               <div className="p-8 space-y-6">
+                  <div className="space-y-4">
+                     <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Informação dos Membros</p>
+                     {[ {name: selected.leader_name, phone: selected.leader_phone, age: selected.age || 'N/A'}, ...selected.members_data ].map((m, i) => (
+                        <div key={i} className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl">
+                           <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[10px] font-black text-primary border border-slate-100">{i===0 ? 'L' : i}</div>
+                              <p className="text-sm font-bold text-slate-700">{m.name}</p>
+                           </div>
+                           <p className="text-[10px] font-black text-slate-400 uppercase">{m.age} ANOS • {m.phone}</p>
+                        </div>
+                     ))}
+                  </div>
+                  <div className="pt-6 border-t border-slate-100 flex justify-between items-center">
+                     <div><p className="text-[9px] font-black text-slate-300 uppercase">Total Líquido</p><p className="text-2xl font-black italic text-primary">{selected.total_price.toLocaleString()} AOA</p></div>
+                     <button onClick={()=>setSelected(null)} className="bg-slate-100 px-8 h-12 rounded-xl text-[10px] font-black uppercase">Fechar Detalhes</button>
+                  </div>
+               </div>
+            </div>
+         </div>
+       )}
+    </div>
   );
 }
 
-function StatusView() {
+function ActionIcon({ icon, color, onClick }: any) {
   return (
-    <motion.div 
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className="max-w-2xl mx-auto space-y-10"
-    >
-      <section className="mb-10">
-        <div className="flex items-center gap-3 mb-2">
-          <span className="w-8 h-[1px] bg-primary/30" />
-          <span className="font-label text-on-surface-variant text-[11px] uppercase tracking-[0.3em] font-bold">ESTADO DO PEDIDO</span>
-        </div>
-        <h2 className="font-headline text-5xl font-bold tracking-tighter text-on-surface">Paddock Status</h2>
-      </section>
-
-      <Card variant="high" className="p-10 relative overflow-hidden text-center space-y-6">
-        <div className="flex justify-center">
-          <div className="w-20 h-20 bg-[#fff1f2] rounded-3xl flex items-center justify-center border border-[#fff1f2]">
-            <Timer size={40} className="text-[#9d1c2b] animate-pulse" />
-          </div>
-        </div>
-        <div className="space-y-2">
-          <h3 className="font-headline text-3xl font-black uppercase italic">Aguardando Aprovação</h3>
-          <p className="text-on-surface-variant max-w-sm mx-auto font-medium">O seu registo está em fila de espera para validação técnica pela nossa equipa.</p>
-        </div>
-        <div className="pt-6 border-t border-gray-100">
-          <p className="text-[#9d1c2b] font-bold text-xl">Aguarde o sinal do staff</p>
-          <p className="text-on-surface-variant text-sm mt-1">A confirmação será enviada via SMS em breve.</p>
-        </div>
-      </Card>
-
-      <div className="grid grid-cols-2 gap-4">
-        <Card className="flex items-center gap-4">
-          <Users className="text-primary" />
-          <div>
-            <p className="text-[9px] font-bold uppercase text-on-surface-variant">Pilotos</p>
-            <p className="font-headline font-bold text-xl">4 Inscritos</p>
-          </div>
-        </Card>
-        <Card className="flex items-center gap-4">
-          <MapPin className="text-primary" />
-          <div>
-            <p className="text-[9px] font-bold uppercase text-on-surface-variant">Paddock</p>
-            <p className="font-headline font-bold text-xl">01 - Luanda</p>
-          </div>
-        </Card>
-      </div>
-    </motion.div>
+    <button onClick={onClick} className={cn("p-2 hover:bg-slate-50 rounded-lg transition-all active:scale-90", color || "text-primary/60")}>
+       {icon}
+    </button>
   );
 }
 
-function AdminDashboard() {
-  const [pendingGroups, setPendingGroups] = useState([
-    { id: '1', leader: 'Ricardo Torque', pilots: 4, total: '60.000 AOA', time: 'Há 2 min' },
-    { id: '2', leader: 'Ana Sprint', pilots: 2, total: '30.000 AOA', time: 'Há 15 min' },
-  ]);
+// -----------------------------------------------------
+// TAB: LIVE GRID (ITEL REFINEMENT)
+// -----------------------------------------------------
+
+function LiveGrid({ partner }: any) {
+  const [active, setActive] = useState<any[]>([]);
+  useEffect(() => { supabase.from('groups').select('*').eq('partner_id', partner.id).eq('status', 'approved').order('queue_position').then(({data})=>setActive(data||[]));}, [partner.id]);
 
   return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="space-y-10"
-    >
-      <section className="flex justify-between items-end">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <span className="w-8 h-[1px] bg-primary" />
-            <span className="font-label text-primary text-[10px] uppercase font-bold tracking-[0.3em]">Paddock Control</span>
-          </div>
-          <h2 className="font-headline text-4xl font-bold tracking-tight">Solicitações</h2>
-        </div>
-        <div className="text-right">
-          <p className="text-4xl font-headline font-black text-[#9d1c2b] italic">{pendingGroups.length}</p>
-          <p className="text-[10px] font-black uppercase text-on-surface-variant tracking-widest">Pendentes</p>
-        </div>
-      </section>
-
-      <div className="space-y-4">
-        {pendingGroups.map(group => (
-          <Card key={group.id} className="flex flex-col md:flex-row justify-between items-center gap-6 shadow-sm">
-            <div className="flex items-center gap-6 w-full md:w-auto">
-              <div className="w-12 h-12 bg-[#fff1f2] rounded-2xl flex items-center justify-center text-[#9d1c2b]">
-                <Users size={24} />
-              </div>
-              <div>
-                <h4 className="font-bold text-lg">{group.leader}</h4>
-                <p className="text-xs text-on-surface-variant uppercase tracking-widest font-black">{group.pilots} Pilotos • {group.time}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end">
-              <p className="font-headline font-bold text-xl text-[#9d1c2b] italic">{group.total}</p>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => setPendingGroups(pendingGroups.filter(g => g.id !== group.id))}>
-                  <XCircle size={18} />
-                </Button>
-                <Button size="sm" onClick={() => setPendingGroups(pendingGroups.filter(g => g.id !== group.id))}>
-                  <CheckCircle2 size={18} />
-                </Button>
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
-
-      <section className="space-y-6">
-        <h3 className="font-headline text-2xl font-bold uppercase italic">Fila Ativa</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="border-l-4 border-emerald-500 shadow-sm">
-            <div className="flex justify-between items-start mb-4">
-              <span className="bg-emerald-50 text-emerald-600 text-[9px] font-black px-2 py-1 rounded-full uppercase tracking-wider">Em Pista</span>
-              <Timer size={16} className="text-emerald-500" />
-            </div>
-            <h4 className="font-bold">Scuderia 42</h4>
-            <p className="text-xs text-on-surface-variant mt-1 font-medium">Tempo restante: 08:42</p>
-          </Card>
-          <Card className="opacity-60 border-l-4 border-[#9d1c2b] shadow-sm">
-            <div className="flex justify-between items-start mb-4">
-              <span className="bg-[#fff1f2] text-[#9d1c2b] text-[9px] font-black px-2 py-1 rounded-full uppercase tracking-wider">Próximo</span>
-              <ChevronRight size={16} className="text-[#9d1c2b]" />
-            </div>
-            <h4 className="font-bold">Grip Masters</h4>
-            <p className="text-xs text-on-surface-variant mt-1 font-medium">Aguardando no pit lane</p>
-          </Card>
-        </div>
-      </section>
-    </motion.div>
+    <div className="space-y-6">
+       <div className="bg-slate-900 p-12 rounded-[3.5rem] border-b-8 border-primary text-white flex justify-between items-center shadow-xl">
+          <div className="space-y-3"><p className="text-[10px] font-black text-primary uppercase tracking-[0.4em] italic mb-1 flex items-center gap-2 animate-pulse"><Activity size={14}/> SINAL PISTA ACTIVO</p><h3 className="text-5xl font-black italic uppercase leading-none">Alfa Pro Racers</h3></div>
+          <button className="h-16 px-10 bg-primary/20 border border-primary text-primary rounded-[2.5rem] font-black text-xs uppercase italic tracking-widest hover:bg-primary hover:text-white transition-all">Encerrar Sprint</button>
+       </div>
+       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {active.map((g, i) => (
+             <div key={g.id} className="itel-card group flex justify-between items-center">
+                <div className="flex items-center gap-6"><p className="text-4xl font-black text-slate-100 group-hover:text-primary transition-all italic">#{i+1}</p><div><h4 className="text-lg font-black italic uppercase text-slate-800 leading-none">{g.leader_name}</h4><p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">Aguardando Pit Lane</p></div></div>
+                <button onClick={async () => { await RacingEngine.startRace(partner.id, g.id); window.location.reload(); }} className="bg-primary text-white text-[10px] font-black px-6 py-3 rounded-xl uppercase shadow-lg shadow-primary/10">Arrancar</button>
+             </div>
+          ))}
+       </div>
+    </div>
   );
 }
 
-function SuperAdminDashboard() {
+// -----------------------------------------------------
+// TAB: AUDIT & PRICE (ITEL STYLE)
+// -----------------------------------------------------
+
+function AuditView({ partner }: any) {
+  const [logs, setLogs] = useState<any[]>([]);
+  useEffect(() => { supabase.from('audit_logs').select('*').eq('partner_id', partner.id).order('created_at', { ascending: false }).then(({data})=>setLogs(data||[])); }, [partner.id]);
+
   return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="space-y-10"
-    >
-      <section>
-        <div className="flex items-center gap-3 mb-2">
-          <span className="w-8 h-[1px] bg-primary" />
-          <span className="font-label text-primary text-[10px] uppercase font-bold tracking-[0.3em]">Global Ecosystem</span>
-        </div>
-        <h1 className="font-headline text-5xl font-bold tracking-tight">Gestão de Parceiros</h1>
-      </section>
-
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="text-center">
-          <p className="text-[10px] font-bold uppercase text-on-surface-variant mb-2">Parceiros</p>
-          <p className="text-4xl font-headline font-black">24</p>
-        </Card>
-        <Card className="text-center">
-          <p className="text-[10px] font-bold uppercase text-on-surface-variant mb-2">Corridas (24h)</p>
-          <p className="text-4xl font-headline font-black">1.420</p>
-        </Card>
-        <Card className="text-center">
-          <p className="text-[10px] font-bold uppercase text-on-surface-variant mb-2">Receita Total</p>
-          <p className="text-4xl font-headline font-black text-primary">4.2M</p>
-        </Card>
-        <Card className="text-center">
-          <p className="text-[10px] font-bold uppercase text-on-surface-variant mb-2">Uptime</p>
-          <p className="text-4xl font-headline font-black text-tertiary">99.9%</p>
-        </Card>
-      </div>
-
-      <Card className="p-0 overflow-hidden shadow-sm">
-        <table className="w-full text-left">
-          <thead className="bg-gray-50 border-b border-gray-100">
-            <tr>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-[#1a1a1a]">Parceiro</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-[#1a1a1a]">Localização</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-[#1a1a1a]">Status</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-[#1a1a1a] text-right">Ações</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {[
-              { name: 'Speedway Luanda', loc: 'Luanda, AO', status: 'Operacional' },
-              { name: 'Benguela Pro', loc: 'Benguela, AO', status: 'Operacional' },
-              { name: 'Huambo Arena', loc: 'Huambo, AO', status: 'Manutenção', error: true },
-            ].map((p, i) => (
-              <tr key={i} className="hover:bg-gray-50 transition-colors">
-                <td className="px-6 py-4 font-bold">{p.name}</td>
-                <td className="px-6 py-4 text-sm text-on-surface-variant font-medium">{p.loc}</td>
-                <td className="px-6 py-4">
-                  <span className={cn(
-                    "text-[9px] font-black uppercase px-2 py-1 rounded-full",
-                    p.error ? "bg-red-100 text-red-600" : "bg-emerald-100 text-emerald-600"
-                  )}>
-                    {p.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <Button variant="ghost" size="sm"><ChevronRight size={16} /></Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </Card>
-    </motion.div>
+    <div className="bg-slate-50 border border-slate-100 rounded-3xl overflow-hidden divide-y divide-slate-100">
+       {logs.map((l) => (
+          <div key={l.id} className="p-6 flex justify-between items-center group hover:bg-white transition-all">
+             <div className="flex items-center gap-6"><div className="w-1.5 h-8 bg-slate-200 group-hover:bg-primary rounded-full transition-all"/><div className="space-y-1"><p className="text-xs font-black text-slate-800 uppercase tracking-tight italic">{l.service_name} • {l.action}</p><p className="text-xs font-medium text-slate-400">ID: #{l.id.slice(0,12)}</p></div></div>
+             <span className="text-[10px] font-bold text-slate-300 italic">{new Date(l.created_at).toLocaleString()}</span>
+          </div>
+       ))}
+    </div>
   );
 }
+
+function PriceEditor({ partner, navigate }: any) {
+  const [prices, setPrices] = useState<any[]>([]);
+  const daysS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+  useEffect(() => { supabase.from('daily_pricing').select('*').eq('partner_id', partner.id).order('day_of_week').then(({data})=>setPrices(data||[])); }, [partner.id]);
+
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+       {prices.map((p) => (
+          <div key={p.id} className="itel-card flex flex-col justify-between h-44 border-slate-100 hover:border-primary/20">
+             <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{daysS[p.day_of_week]}</p>
+             <input defaultValue={p.price_per_runner} onBlur={async e => { await supabase.from('daily_pricing').update({ price_per_runner: parseFloat(e.target.value) }).eq('id', p.id); alert('Sincronizado!'); }} className="text-2xl font-black italic bg-transparent p-0 border-none w-full focus:ring-0 text-slate-800" />
+             <p className="text-[9px] font-black text-primary uppercase underline underline-offset-4 decoration-primary/20">AOA por Piloto</p>
+          </div>
+       ))}
+    </div>
+  );
+}
+
+// SUPER ADMIN PLACEHOLDER
+function SuperAdminDash({ navigate }: any) { return <div className="py-24 text-center space-y-10"><h2 className="text-6xl font-black italic uppercase tracking-tighter">HQ Network Control</h2><div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto"><button className="itel-card p-12 font-black uppercase italic border-2 hover:border-primary transition-all">Gestão Parceiros</button><button className="itel-card p-12 font-black uppercase italic border-2">Monitor Global</button></div></div>; }

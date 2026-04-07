@@ -1,83 +1,60 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;900&family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-headline: "Outfit", sans-serif;
   --font-body: "Inter", sans-serif;
-  --font-label: "Outfit", sans-serif;
 
-  --color-primary: #9d1c2b;
-  --color-primary-container: #fff1f2;
-  --color-on-primary: #ffffff;
-  
-  --color-secondary: #f4a7bb;
-  --color-secondary-container: #fff1f2;
-  
-  --color-tertiary: #10b981;
-  --color-tertiary-container: #ecfdf5;
-  --color-on-tertiary: #ffffff;
-
-  --color-surface: #ffffff;
-  --color-surface-container-low: #f9fafb;
-  --color-surface-container: #f3f4f6;
-  --color-surface-container-high: #e5e7eb;
-  --color-surface-container-highest: #d1d5db;
-  --color-surface-bright: #ffffff;
-  --color-surface-dim: #f3f4f6;
-  
-  --color-on-surface: #1a1a1a;
-  --color-on-surface-variant: #6b7280;
-  
+  --color-primary: #2563eb;
+  --color-primary-variant: #dbeafe;
+  --color-secondary: #0f172a;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
   --color-error: #ef4444;
-  --color-error-container: #fef2f2;
+  --color-surface: #f8fafc;
+  --color-on-surface: #64748b;
+  --color-on-surface-strong: #1e293b;
 }
 
 @layer base {
   body {
     @apply bg-surface text-on-surface font-body antialiased;
-    background: radial-gradient(circle at center, #ffffff 0%, #f9fafb 100%);
-    background-attachment: fixed;
-  }
-
-  /* Custom Scrollbar */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  ::-webkit-scrollbar-track {
-    @apply bg-surface;
-  }
-  ::-webkit-scrollbar-thumb {
-    @apply bg-surface-container-highest rounded-full border-2 border-surface;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-primary/40;
   }
 }
 
-.glass {
-  @apply bg-white/70 backdrop-blur-xl border border-gray-100;
-}
+@layer components {
+  /* Cartão Elite Estilo Print */
+  .itel-card {
+    @apply bg-white border border-slate-100 rounded-2xl p-6 shadow-sm shadow-slate-200/50 transition-all duration-300;
+  }
 
-.glass-dark {
-  @apply bg-black/40 backdrop-blur-2xl border border-white/5;
-}
+  .itel-badge {
+    @apply text-[10px] font-bold px-2 py-1 rounded-lg uppercase tracking-tight;
+  }
 
-.kinetic-gradient {
-  background: #f4a7bb; /* New color based on the design button */
-}
+  /* Abas de Navegação */
+  .itel-tab {
+    @apply flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all;
+  }
 
-.text-glow {
-  text-shadow: 0 0 15px rgba(157, 28, 43, 0.1);
-}
+  .itel-tab-active {
+    @apply bg-primary text-white shadow-lg shadow-primary/30;
+  }
 
-.race-italic {
-  font-style: italic;
-  transform: skewX(-5deg);
-}
+  .itel-tab-inactive {
+    @apply bg-white text-on-surface hover:bg-slate-50 border border-transparent;
+  }
 
-.paddock-grid {
-  background-image: radial-gradient(rgba(157, 28, 43, 0.05) 1px, transparent 1px);
-  background-size: 24px 24px;
-}
+  /* Estética de Tabela do Print */
+  .itel-table-header {
+    @apply text-[10px] font-black uppercase text-slate-300 tracking-widest py-4 border-b border-slate-100;
+  }
 
+  .itel-table-row {
+    @apply border-b border-slate-50 hover:bg-slate-50/50 transition-colors py-4;
+  }
+
+  .avatar-initials {
+    @apply w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold bg-primary-variant text-primary;
+  }
+}
